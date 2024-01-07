@@ -1,6 +1,9 @@
 package vmess
 
 import (
+	"encoding/base64"
+	"encoding/json"
+	"fmt"
 	"net"
 	"net/url"
 	"strconv"
@@ -22,12 +25,46 @@ type VMess struct {
 	client *Client
 }
 
+type VMessJson struct {
+	V    string `json:"v"`
+	Ps   string `json:"ps"`
+	Add  string `json:"add"`
+	Port string `json:"port"`
+	ID   string `json:"id"`
+	Aid  string `json:"aid"`
+	Net  string `json:"net"`
+	Type string `json:"type"`
+	Host string `json:"host"`
+	Path string `json:"path"`
+	TLS  string `json:"tls"`
+}
+
 func init() {
 	proxy.RegisterDialer("vmess", NewVMessDialer)
 }
 
 // NewVMess returns a vmess proxy.
 func NewVMess(s string, d proxy.Dialer) (*VMess, error) {
+
+	ss := s[8:]
+	jsonStr, err := base64.StdEncoding.DecodeString(ss)
+	if err != nil {
+		log.F("base64 decode err: %s", err)
+		return nil, err
+	}
+	var data VMessJson
+
+	err = json.Unmarshal(jsonStr, &data)
+	if err != nil {
+		log.F("json unmarshal err: %s", err)
+	}
+
+	if data.Host != "" {
+		s = fmt.Sprintf("vmess://%s@%s:%s", data.ID, data.Host, data.Port)
+	} else {
+		s = fmt.Sprintf("vmess://%s@%s:%s", data.ID, data.Add, data.Port)
+	}
+
 	u, err := url.Parse(s)
 	if err != nil {
 		log.F("parse url err: %s", err)
