@@ -1,7 +1,9 @@
 package ss
 
 import (
+	"encoding/base64"
 	"net/url"
+	"strings"
 
 	"github.com/nadoo/glider/pkg/log"
 	"github.com/nadoo/glider/proxy"
@@ -22,17 +24,40 @@ func init() {
 	proxy.RegisterServer("ss", NewSSServer)
 }
 
+func addPaddingIfNeeded(base64String string) string {
+	// 计算需要添加的填充字符数量
+	padding := strings.Repeat("=", (4-len(base64String)%4)%4)
+	return base64String + padding
+}
+
 // NewSS returns a ss proxy.
 func NewSS(s string, d proxy.Dialer, p proxy.Proxy) (*SS, error) {
+
 	u, err := url.Parse(s)
 	if err != nil {
 		log.F("[ss] parse err: %s", err)
 		return nil, err
 	}
 
+	var method, pass string
+
 	addr := u.Host
-	method := u.User.Username()
-	pass, _ := u.User.Password()
+	if !strings.Contains(u.User.String(), "-") {
+
+		paddedBase64String := addPaddingIfNeeded(u.User.String())
+		ss, err := base64.StdEncoding.DecodeString(paddedBase64String)
+		if err != nil {
+			log.F("base64 decode err: %s %s", err, u.User.String())
+			return nil, err
+		}
+
+		method = strings.Split(string(ss), ":")[0]
+		pass = strings.Split(string(ss), ":")[1]
+
+	} else {
+		method = u.User.Username()
+		pass, _ = u.User.Password()
+	}
 
 	ciph, err := cipher.PickCipher(method, nil, pass)
 	if err != nil {
