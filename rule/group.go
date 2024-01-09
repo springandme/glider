@@ -35,6 +35,15 @@ type FwdrGroup struct {
 	next     func(addr string) *Forwarder
 }
 
+type ProviderGroup struct {
+	url []string
+}
+
+func NewProviderGroup(providers []string) *ProviderGroup {
+	p := &ProviderGroup{url: providers}
+	return p
+}
+
 // NewFwdrGroup returns a new forward group.
 func NewFwdrGroup(rulePath string, s []string, c *Strategy) *FwdrGroup {
 	var fwdrs []*Forwarder
@@ -95,7 +104,7 @@ func newFwdrGroup(name string, fwdrs []*Forwarder, c *Strategy) *FwdrGroup {
 	}
 
 	for _, f := range fwdrs {
-		f.AddHandler(p.onStatusChanged)
+		f.AddHandler(p.OnStatusChanged)
 	}
 
 	return p
@@ -157,7 +166,7 @@ func (p *FwdrGroup) init() {
 }
 
 // onStatusChanged will be called when fwdr's status changed.
-func (p *FwdrGroup) onStatusChanged(fwdr *Forwarder) {
+func (p *FwdrGroup) OnStatusChanged(fwdr *Forwarder) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 

@@ -1,10 +1,17 @@
 package rule
 
 import (
+	"encoding/base64"
+	"fmt"
+	"io"
 	"net"
+	"net/http"
 	"net/netip"
+	"net/url"
+	"slices"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/nadoo/glider/pkg/log"
 	"github.com/nadoo/glider/proxy"
@@ -17,11 +24,15 @@ type Proxy struct {
 	domainMap sync.Map
 	ipMap     sync.Map
 	cidrMap   sync.Map
+	provider  *ProviderGroup
 }
 
 // NewProxy returns a new rule proxy.
-func NewProxy(mainForwarders []string, mainStrategy *Strategy, rules []*Config) *Proxy {
-	rd := &Proxy{main: NewFwdrGroup("main", mainForwarders, mainStrategy)}
+func NewProxy(mainForwarders []string, mainStrategy *Strategy, rules []*Config, ForwardsProvider []string) *Proxy {
+	rd := &Proxy{
+		main:     NewFwdrGroup("main", mainForwarders, mainStrategy),
+		provider: NewProviderGroup(ForwardsProvider),
+	}
 
 	for _, r := range rules {
 		group := NewFwdrGroup(r.RulePath, r.Forward, &r.Strategy)
@@ -153,4 +164,94 @@ func (p *Proxy) Check() {
 	for _, fwdrGroup := range p.all {
 		fwdrGroup.Check()
 	}
+}
+
+func GetPageContent(url string) (content string, err error) {
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return "", err
+	}
+
+	// 设置 Referer 标头
+	req.Header.Set("Referer", "https://www.baidu.com")
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	pageBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	return string(pageBytes), nil
+}
+
+func (p *Proxy) Fetch() {
+
+	var currentFwdrs []string
+
+	for _, fwdr := range p.main.fwdrs {
+		currentFwdrs = append(currentFwdrs, fwdr.url)
+	}
+
+	var c string
+	for _, urlstring := range p.provider.url {
+
+		parsedURL, err := url.Parse(urlstring)
+		if err != nil {
+			fmt.Println("解析URL错误:", err)
+			return
+		}
+
+		// 获取主机信息
+		host := parsedURL.Host
+		c, err = GetPageContent(urlstring)
+		if err != nil {
+			log.F("[provider] get %s err %s ", host, err)
+
+		}
+		cc := addPaddingIfNeeded(c)
+		rawContent, _ := base64.StdEncoding.DecodeString(cc)
+
+		lines := strings.Split(string(rawContent), "\n")
+		for _, line := range lines {
+
+			if len(line) == 0 {
+				break
+			}
+
+			if strings.Contains(line, "peer=&sni=#Info") {
+				continue
+			}
+
+			if !slices.Contains(currentFwdrs, line) {
+				fwdr, err := ForwarderFromURL(line, "",
+					time.Duration(3)*time.Second, time.Duration(0)*time.Second)
+				if err != nil {
+					log.Fatal(err)
+				}
+				fwdr.SetMaxFailures(uint32(3))
+				p.main.fwdrs = append(p.main.fwdrs, fwdr)
+
+				fwdr.AddHandler(p.main.OnStatusChanged)
+
+			}
+
+		}
+
+	}
+	// for _, f := range p.main.fwdrs {
+	// 	f.AddHandler(p.main.OnStatusChanged)
+	// }
+}
+
+func addPaddingIfNeeded(base64String string) string {
+	// 计算需要添加的填充字符数量
+	padding := strings.Repeat("=", (4-len(base64String)%4)%4)
+	return base64String + padding
 }

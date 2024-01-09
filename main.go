@@ -23,7 +23,7 @@ var (
 
 func main() {
 	// global rule proxy
-	pxy := rule.NewProxy(config.Forwards, &config.Strategy, config.rules)
+	pxy := rule.NewProxy(config.Forwards, &config.Strategy, config.rules, config.ForwardsProvider)
 
 	// ipset manager
 	ipsetM, _ := ipset.NewManager(config.rules)
@@ -66,6 +66,7 @@ func main() {
 		r.IP, r.CIDR, r.Domain = nil, nil, nil
 	}
 
+	pxy.Fetch()
 	// enable checkers
 	pxy.Check()
 
