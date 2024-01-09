@@ -24,8 +24,9 @@ type Config struct {
 
 	Listens []string
 
-	Forwards []string
-	Strategy rule.Strategy
+	Forwards         []string
+	ForwardsProvider []string
+	Strategy         rule.Strategy
 
 	RuleFiles []string
 	RulesDir  string
@@ -53,6 +54,7 @@ func parseConfig() *Config {
 	flag.StringSliceUniqVar(&conf.Listens, "listen", nil, "listen url, see the URL section below")
 
 	flag.StringSliceVar(&conf.Forwards, "forward", nil, "forward url, see the URL section below")
+	flag.StringSliceVar(&conf.ForwardsProvider, "forwardprovider", nil, "forward url, see the URL section below")
 	flag.StringVar(&conf.Strategy.Strategy, "strategy", "rr", `rr: Round Robin mode
 ha: High Availability mode
 lha: Latency based High Availability mode
