@@ -26,6 +26,7 @@ type Config struct {
 
 	Forwards         []string
 	ForwardsProvider []string
+	ForwardsExclude  []string
 	Strategy         rule.Strategy
 
 	RuleFiles []string
@@ -54,7 +55,9 @@ func parseConfig() *Config {
 	flag.StringSliceUniqVar(&conf.Listens, "listen", nil, "listen url, see the URL section below")
 
 	flag.StringSliceVar(&conf.Forwards, "forward", nil, "forward url, see the URL section below")
-	flag.StringSliceVar(&conf.ForwardsProvider, "forwardprovider", nil, "forward url, see the URL section below")
+	flag.StringSliceVar(&conf.ForwardsProvider, "forwardprovider", nil, "forwards provider")
+	flag.StringSliceVar(&conf.ForwardsExclude, "forwardsexclude", nil, "forwards exclude keyword")
+
 	flag.StringVar(&conf.Strategy.Strategy, "strategy", "rr", `rr: Round Robin mode
 ha: High Availability mode
 lha: Latency based High Availability mode

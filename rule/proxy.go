@@ -28,10 +28,10 @@ type Proxy struct {
 }
 
 // NewProxy returns a new rule proxy.
-func NewProxy(mainForwarders []string, mainStrategy *Strategy, rules []*Config, ForwardsProvider []string) *Proxy {
+func NewProxy(mainForwarders []string, mainStrategy *Strategy, rules []*Config, ForwardsProvider []string, ForwardsExclude []string) *Proxy {
 	rd := &Proxy{
 		main:     NewFwdrGroup("main", mainForwarders, mainStrategy),
-		provider: NewProviderGroup(ForwardsProvider),
+		provider: NewProviderGroup(ForwardsProvider, ForwardsExclude),
 	}
 
 	for _, r := range rules {
@@ -227,6 +227,28 @@ func (p *Proxy) Fetch() {
 
 			if strings.Contains(line, "peer=&sni=#Info") {
 				continue
+			}
+
+			// check exclude
+			if len(p.provider.excludes) > 0 {
+				for _, e := range p.provider.excludes {
+					// trojan
+					// vmess
+					var s, ss string
+					ss = line
+					if strings.HasPrefix(line, "vmess://") {
+						s = addPaddingIfNeeded(strings.Replace(line, "vmess://", "", 1))
+
+						rs, _ := base64.StdEncoding.DecodeString(s)
+
+						ss = string(rs)
+
+					}
+					if strings.Contains(ss, e) {
+						log.F("[provider] skip add %s, exclude keyword %s", line, e)
+						continue
+					}
+				}
 			}
 
 			if !slices.Contains(currentFwdrs, line) {
