@@ -266,6 +266,9 @@ func (p *Proxy) Fetch() {
 							fwdr.AddHandler(p.main.OnStatusChanged)
 						}
 
+						// when matched, skip next check include
+						break
+
 					}
 
 				}
