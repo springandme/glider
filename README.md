@@ -23,6 +23,12 @@ we can set up local listeners as proxy servers, and forward requests to internet
 3. 修复了 trojan 链接格式，我这边的链接都是用的 sni，而不是 serverName，skipVerify 的值是 true。（glider 0.16.3 的 trojan 还是不支持 alpn 和 udp）
 4. 增加了支持机场订阅链接，可以填写多个机场订阅链接，仅在 【4.multiple_forwarders】 使用场景测试可以用，可能破坏了其他功能。（订阅链接限制：base64 编码，且非 clash 格式，base64 解码后是多条节点链接，不带规则配置。）
 
+2024.04.02 新增  
+1. 新增 forwardsinclude 和 forwardsexclude ，用于通过关键字过滤/排除节点名称（ 因为 golang 的正则不支持 Perl 风格的负向预查，所以需要添加 包含/排除 两个配置）
+
+注意：
+- 如果同时配置 forwardsinclude 和 forwardsexclude，将以 forwardsinclude 配置为准，忽略 forwardsexclude 配置
+
 ## Features
 - Act as both proxy client and proxy server(protocol converter)
 - Flexible proxy & protocol chains

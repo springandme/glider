@@ -2,7 +2,6 @@ package rule
 
 import (
 	"encoding/base64"
-	"fmt"
 	"io"
 	"net"
 	"net/http"
@@ -28,10 +27,10 @@ type Proxy struct {
 }
 
 // NewProxy returns a new rule proxy.
-func NewProxy(mainForwarders []string, mainStrategy *Strategy, rules []*Config, ForwardsProvider []string, ForwardsExclude []string) *Proxy {
+func NewProxy(mainForwarders []string, mainStrategy *Strategy, rules []*Config, ForwardsProvider []string, ForwardsExclude []string, ForwardsInclude []string) *Proxy {
 	rd := &Proxy{
 		main:     NewFwdrGroup("main", mainForwarders, mainStrategy),
-		provider: NewProviderGroup(ForwardsProvider, ForwardsExclude),
+		provider: NewProviderGroup(ForwardsProvider, ForwardsExclude, ForwardsInclude),
 	}
 
 	for _, r := range rules {
@@ -199,24 +198,24 @@ func (p *Proxy) Fetch() {
 		currentFwdrs = append(currentFwdrs, fwdr.url)
 	}
 
-	var c string
+	var content string
 	for _, urlstring := range p.provider.url {
 
 		parsedURL, err := url.Parse(urlstring)
 		if err != nil {
-			fmt.Println("解析URL错误:", err)
+			log.F("[provider] parse provider url: %s, error: %s", urlstring, err)
 			return
 		}
 
 		// 获取主机信息
 		host := parsedURL.Host
-		c, err = GetPageContent(urlstring)
+		content, err = GetPageContent(urlstring)
 		if err != nil {
 			log.F("[provider] get %s err %s ", host, err)
 
 		}
-		cc := addPaddingIfNeeded(c)
-		rawContent, _ := base64.StdEncoding.DecodeString(cc)
+		paddingContent := addPaddingIfNeeded(content)
+		rawContent, _ := base64.StdEncoding.DecodeString(paddingContent)
 
 		lines := strings.Split(string(rawContent), "\n")
 		for _, line := range lines {
@@ -225,27 +224,77 @@ func (p *Proxy) Fetch() {
 				break
 			}
 
+			// 某些机场使用空 SNI 的节点配置，用于显示流量信息，跳过处理
 			if strings.Contains(line, "peer=&sni=#Info") {
 				continue
 			}
 
-			// check exclude
-			if len(p.provider.excludes) > 0 {
-				for _, e := range p.provider.excludes {
-					// trojan
-					// vmess
-					var s, ss string
-					ss = line
+			// check include
+			// 因为不确定用户是否使用这个配置，所以没有一开始先处理订阅中每行的代理
+			if len(p.provider.includes) > 0 {
+				for _, include := range p.provider.includes {
+
+					var paddingStr1, decodedStr1 string
+
+					// vmess json regard as string
 					if strings.HasPrefix(line, "vmess://") {
-						s = addPaddingIfNeeded(strings.Replace(line, "vmess://", "", 1))
+						paddingStr1 = addPaddingIfNeeded(strings.Replace(line, "vmess://", "", 1))
 
-						rs, _ := base64.StdEncoding.DecodeString(s)
+						decodedBytes, _ := base64.StdEncoding.DecodeString(paddingStr1)
 
-						ss = string(rs)
+						decodedStr1 = string(decodedBytes)
+
+					} else if strings.HasPrefix(line, "trojan://") || strings.HasPrefix(line, "ss://") {
+						// trojan urlencode
+						// ss urlencode
+
+						decodedStr1, _ = url.QueryUnescape(strings.Split(line, "#")[1])
+					}
+
+					if strings.Contains(decodedStr1, include) {
+						log.F("[provider] add [%s], include keyword [%s]", decodedStr1, include)
+
+						if !slices.Contains(currentFwdrs, line) {
+							fwdr, err := ForwarderFromURL(line, "",
+								time.Duration(3)*time.Second, time.Duration(0)*time.Second)
+							if err != nil {
+								log.Fatal(err)
+							}
+							fwdr.SetMaxFailures(uint32(3))
+							p.main.fwdrs = append(p.main.fwdrs, fwdr)
+
+							fwdr.AddHandler(p.main.OnStatusChanged)
+						}
 
 					}
-					if strings.Contains(ss, e) {
-						log.F("[provider] skip add %s, exclude keyword %s", line, e)
+
+				}
+				// omit forwardsinclude
+				continue
+			}
+
+			// check exclude
+			// 因为不确定用户是否使用这个配置，所以没有一开始先处理订阅中每行的代理
+			if len(p.provider.excludes) > 0 {
+				for _, exclude := range p.provider.excludes {
+
+					var paddingStr2, decodedStr2 string
+
+					// trojan
+
+					// vmess
+					// json regard as string
+					if strings.HasPrefix(line, "vmess://") {
+						paddingStr2 = addPaddingIfNeeded(strings.Replace(line, "vmess://", "", 1))
+
+						decodedBytes, _ := base64.StdEncoding.DecodeString(paddingStr2)
+
+						decodedStr2 = string(decodedBytes)
+
+					}
+
+					if strings.Contains(decodedStr2, exclude) {
+						log.F("[provider] skip add %s, exclude keyword %s", line, exclude)
 						continue
 					}
 				}
@@ -261,7 +310,6 @@ func (p *Proxy) Fetch() {
 				p.main.fwdrs = append(p.main.fwdrs, fwdr)
 
 				fwdr.AddHandler(p.main.OnStatusChanged)
-
 			}
 
 		}
