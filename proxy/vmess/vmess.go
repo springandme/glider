@@ -27,27 +27,43 @@ type VMess struct {
 }
 
 type VMessJson struct {
-	V    string `json:"v"`
-	Ps   string `json:"ps"`
-	Add  string `json:"add"`
-	Port string `json:"port"`
-	ID   string `json:"id"`
-	Aid  string `json:"aid"`
-	Net  string `json:"net"`
-	Type string `json:"type"`
-	Host string `json:"host"`
-	Path string `json:"path"`
-	TLS  string `json:"tls"`
+	V    string         `json:"v"`
+	Ps   string         `json:"ps"`
+	Add  string         `json:"add"`
+	Port string         `json:"port"`
+	ID   string         `json:"id"`
+	Aid  StringOrNumber `json:"aid"`
+	Net  string         `json:"net"`
+	Type string         `json:"type"`
+	Host string         `json:"host"`
+	Path string         `json:"path"`
+	TLS  string         `json:"tls"`
+}
+
+type StringOrNumber string
+
+// UnmarshalJSON 是 StringOrNumber 的自定义解码函数
+func (sn *StringOrNumber) UnmarshalJSON(data []byte) error {
+	// 尝试将 JSON 数据解码为一个整数
+	var intValue int
+	if err := json.Unmarshal(data, &intValue); err == nil {
+		*sn = StringOrNumber(strconv.Itoa(intValue))
+		return nil
+	}
+
+	// 尝试将 JSON 数据解码为一个字符串
+	var strValue string
+	if err := json.Unmarshal(data, &strValue); err == nil {
+		*sn = StringOrNumber(strValue)
+		return nil
+	}
+
+	// 如果既不是整数也不是字符串，返回错误
+	return fmt.Errorf("cannot unmarshal %s into StringOrNumber", string(data))
 }
 
 func init() {
 	proxy.RegisterDialer("vmess", NewVMessDialer)
-}
-
-func addPaddingIfNeeded(base64String string) string {
-	// 计算需要添加的填充字符数量
-	padding := strings.Repeat("=", (4-len(base64String)%4)%4)
-	return base64String + padding
 }
 
 // NewVMess returns a vmess proxy.
@@ -122,6 +138,12 @@ func NewVMess(s string, d proxy.Dialer) (*VMess, error) {
 // NewVMessDialer returns a vmess proxy dialer.
 func NewVMessDialer(s string, dialer proxy.Dialer) (proxy.Dialer, error) {
 	return NewVMess(s, dialer)
+}
+
+func addPaddingIfNeeded(base64String string) string {
+	// 计算需要添加的填充字符数量
+	padding := strings.Repeat("=", (4-len(base64String)%4)%4)
+	return base64String + padding
 }
 
 // Addr returns forwarder's address.
