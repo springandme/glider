@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/nadoo/glider/pkg/log"
 	"github.com/nadoo/glider/proxy"
@@ -43,11 +44,18 @@ func init() {
 	proxy.RegisterDialer("vmess", NewVMessDialer)
 }
 
+func addPaddingIfNeeded(base64String string) string {
+	// 计算需要添加的填充字符数量
+	padding := strings.Repeat("=", (4-len(base64String)%4)%4)
+	return base64String + padding
+}
+
 // NewVMess returns a vmess proxy.
 func NewVMess(s string, d proxy.Dialer) (*VMess, error) {
 
 	ss := s[8:]
-	jsonStr, err := base64.StdEncoding.DecodeString(ss)
+	paddedBase64String := addPaddingIfNeeded(ss)
+	jsonStr, err := base64.StdEncoding.DecodeString(paddedBase64String)
 	if err != nil {
 		log.F("base64 decode err: %s", err)
 		return nil, err
