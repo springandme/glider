@@ -69,9 +69,9 @@ func init() {
 // NewVMess returns a vmess proxy.
 func NewVMess(s string, d proxy.Dialer) (*VMess, error) {
 
-	ss := s[8:]
-	paddedBase64String := addPaddingIfNeeded(ss)
-	jsonStr, err := base64.StdEncoding.DecodeString(paddedBase64String)
+	ss := strings.ReplaceAll(s[8:], "=", "")
+	// paddedBase64String := addPaddingIfNeeded(ss)
+	jsonStr, err := base64.RawStdEncoding.DecodeString(ss)
 	if err != nil {
 		log.F("base64 decode err: %s", err)
 		return nil, err
