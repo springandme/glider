@@ -1,10 +1,6 @@
-# [glider](https://github.com/nadoo/glider)
+# [glider](https://github.com/meoww-bot/glider)
 
-[![Go Version](https://img.shields.io/github/go-mod/go-version/nadoo/glider?style=flat-square)](https://go.dev/dl/)
-[![Go Report Card](https://goreportcard.com/badge/github.com/nadoo/glider?style=flat-square)](https://goreportcard.com/report/github.com/nadoo/glider)
-[![GitHub release](https://img.shields.io/github/v/release/nadoo/glider.svg?style=flat-square&include_prereleases)](https://github.com/nadoo/glider/releases)
-[![Actions Status](https://img.shields.io/github/actions/workflow/status/nadoo/glider/build.yml?branch=dev&style=flat-square)](https://github.com/nadoo/glider/actions)
-[![DockerHub](https://img.shields.io/docker/image-size/nadoo/glider?color=blue&label=docker&style=flat-square)](https://hub.docker.com/r/nadoo/glider)
+从 https://github.com/nadoo/glider 魔改的版本。
 
 glider is a forward proxy with multiple protocols support, and also a dns/dhcp server with ipset management features(like dnsmasq).
 
@@ -28,6 +24,16 @@ we can set up local listeners as proxy servers, and forward requests to internet
 
 注意：
 - 如果同时配置 forwardsinclude 和 forwardsexclude，将以 forwardsinclude 配置为准，忽略 forwardsexclude 配置
+
+2024.05.27 新增
+1. 支持了 JMS 的 ss 格式 `ss://[base64 encode of method:pass@ip:port]#JMS-XXXXXX@domain:port`。 （感谢 [@ha-et](https://github.com/ha-et) ）
+
+当前支持的 ss 格式. 
+- 常规格式  `ss://[base64 encode of method:pass]@host:port#nodename`
+- JMS 格式 `ss://[base64 encode of method:pass@ip:port]#JMS-XXXXXX@domain:port`
+
+
+## 以下是原来仓库的 README.md 内容。
 
 ## Features
 - Act as both proxy client and proxy server(protocol converter)
