@@ -56,7 +56,7 @@ func NewSS(s string, d proxy.Dialer, p proxy.Proxy) (*SS, error) {
 
 	} else if !strings.Contains(u.User.String(), "-") {
 
-		paddedBase64String := addPaddingIfNeeded(addr)
+		paddedBase64String := addPaddingIfNeeded(u.User.String())
 		ss, err := base64.StdEncoding.DecodeString(paddedBase64String)
 		if err != nil {
 			log.F("base64 decode err: %s %s", err, u.User.String())
