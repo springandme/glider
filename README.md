@@ -28,7 +28,7 @@ we can set up local listeners as proxy servers, and forward requests to internet
 2024.05.27 新增
 1. 支持了 JMS 的 ss 格式 `ss://[base64 encode of method:pass@ip:port]#JMS-XXXXXX@domain:port`。 （感谢 [@ha-et](https://github.com/ha-et) ）
 
-当前支持的 ss 格式. 
+当前支持的 ss 格式:
 - 常规格式  `ss://[base64 encode of method:pass]@host:port#nodename`
 - JMS 格式 `ss://[base64 encode of method:pass@ip:port]#JMS-XXXXXX@domain:port`
 
