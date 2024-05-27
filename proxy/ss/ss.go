@@ -42,7 +42,19 @@ func NewSS(s string, d proxy.Dialer, p proxy.Proxy) (*SS, error) {
 	var method, pass string
 
 	addr := u.Host
-	if !strings.Contains(u.User.String(), "-") {
+	if u.User == nil {
+		paddedBase64String := addPaddingIfNeeded(addr)
+		ss, err := base64.StdEncoding.DecodeString(paddedBase64String)
+		if err != nil {
+			log.F("[ss] parse err: %s", err)
+			return nil, err
+		}
+		u, err := url.Parse(string(ss))
+		method = u.Scheme
+		pass = strings.Split(u.Opaque, "@")[0]
+		addr = strings.Split(u.Opaque, "@")[1]
+
+	} else if !strings.Contains(u.User.String(), "-") {
 
 		paddedBase64String := addPaddingIfNeeded(u.User.String())
 		ss, err := base64.StdEncoding.DecodeString(paddedBase64String)
