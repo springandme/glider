@@ -4,7 +4,7 @@ import (
 	"crypto/cipher"
 	"io"
 
-	"github.com/nadoo/glider/pkg/pool"
+	"github.com/meoww-bot/glider/pkg/pool"
 )
 
 const bufSize = 32 * 1024

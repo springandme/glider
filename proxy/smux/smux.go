@@ -1,6 +1,6 @@
 package smux
 
-import "github.com/nadoo/glider/proxy"
+import "github.com/meoww-bot/glider/proxy"
 
 func init() {
 	proxy.AddUsage("smux", `

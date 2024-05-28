@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nadoo/glider/pkg/pool"
+	"github.com/meoww-bot/glider/pkg/pool"
 )
 
 // Checker is a forwarder health checker.

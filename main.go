@@ -8,12 +8,12 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/nadoo/glider/dns"
-	"github.com/nadoo/glider/ipset"
-	"github.com/nadoo/glider/pkg/log"
-	"github.com/nadoo/glider/proxy"
-	"github.com/nadoo/glider/rule"
-	"github.com/nadoo/glider/service"
+	"github.com/meoww-bot/glider/dns"
+	"github.com/meoww-bot/glider/ipset"
+	"github.com/meoww-bot/glider/pkg/log"
+	"github.com/meoww-bot/glider/proxy"
+	"github.com/meoww-bot/glider/rule"
+	"github.com/meoww-bot/glider/service"
 )
 
 var (

@@ -1,6 +1,6 @@
-module github.com/nadoo/glider
+module github.com/meoww-bot/glider
 
-go 1.20
+go 1.21
 
 require (
 	github.com/aead/chacha20 v0.0.0-20180709150244-8b13a72661da

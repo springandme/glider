@@ -18,8 +18,8 @@ import (
 	"golang.org/x/crypto/cast5"
 	"golang.org/x/crypto/salsa20/salsa"
 
-	"github.com/nadoo/glider/pkg/pool"
-	"github.com/nadoo/glider/proxy/ssr/internal/tools"
+	"github.com/meoww-bot/glider/pkg/pool"
+	"github.com/meoww-bot/glider/proxy/ssr/internal/tools"
 )
 
 var errEmptyPassword = errors.New("empty key")

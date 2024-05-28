@@ -7,7 +7,7 @@ import (
 
 	"github.com/nadoo/ipset"
 
-	"github.com/nadoo/glider/rule"
+	"github.com/meoww-bot/glider/rule"
 )
 
 // Manager struct.

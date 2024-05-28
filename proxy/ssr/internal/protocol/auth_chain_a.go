@@ -13,9 +13,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nadoo/glider/proxy/ssr/internal/cipher"
-	"github.com/nadoo/glider/proxy/ssr/internal/ssr"
-	"github.com/nadoo/glider/proxy/ssr/internal/tools"
+	"github.com/meoww-bot/glider/proxy/ssr/internal/cipher"
+	"github.com/meoww-bot/glider/proxy/ssr/internal/ssr"
+	"github.com/meoww-bot/glider/proxy/ssr/internal/tools"
 )
 
 func init() {

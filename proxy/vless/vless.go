@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/nadoo/glider/proxy"
+	"github.com/meoww-bot/glider/proxy"
 )
 
 // Version of vless protocol.

@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nadoo/glider/pkg/log"
-	"github.com/nadoo/glider/pkg/pool"
-	"github.com/nadoo/glider/proxy"
+	"github.com/meoww-bot/glider/pkg/log"
+	"github.com/meoww-bot/glider/pkg/pool"
+	"github.com/meoww-bot/glider/proxy"
 )
 
 // NewHTTPServer returns a http proxy server.

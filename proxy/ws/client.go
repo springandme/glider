@@ -10,8 +10,8 @@ import (
 	"net/textproto"
 	"os"
 
-	"github.com/nadoo/glider/pkg/pool"
-	"github.com/nadoo/glider/proxy"
+	"github.com/meoww-bot/glider/pkg/pool"
+	"github.com/meoww-bot/glider/proxy"
 )
 
 // NewWSDialer returns a ws proxy dialer.

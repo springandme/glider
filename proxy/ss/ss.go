@@ -5,9 +5,9 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/nadoo/glider/pkg/log"
-	"github.com/nadoo/glider/proxy"
-	"github.com/nadoo/glider/proxy/ss/cipher"
+	"github.com/meoww-bot/glider/pkg/log"
+	"github.com/meoww-bot/glider/proxy"
+	"github.com/meoww-bot/glider/proxy/ss/cipher"
 )
 
 // SS is a base ss struct.
