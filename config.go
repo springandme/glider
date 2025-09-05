@@ -28,6 +28,7 @@ type Config struct {
 	ForwardsProvider []string
 	ForwardsExclude  []string
 	ForwardsInclude  []string
+	ForwardsProtocolFilter []string
 	Strategy         rule.Strategy
 
 	RuleFiles []string
@@ -59,6 +60,7 @@ func parseConfig() *Config {
 	flag.StringSliceVar(&conf.ForwardsProvider, "forwardprovider", nil, "forwards provider")
 	flag.StringSliceVar(&conf.ForwardsExclude, "forwardsexclude", nil, "forwards exclude keyword")
 	flag.StringSliceVar(&conf.ForwardsInclude, "forwardsinclude", nil, "forwards include keyword")
+	flag.StringSliceVar(&conf.ForwardsProtocolFilter, "forwardsprotocolfilter", nil, "forwards protocol filter, protocols to be filtered out, e.g. hysteria2,vmess")
 
 	flag.StringVar(&conf.Strategy.Strategy, "strategy", "rr", `rr: Round Robin mode
 ha: High Availability mode
@@ -231,31 +233,31 @@ var examples = `
 Examples:
   glider -config glider.conf
     -run glider with specified config file.
-  
+
   glider -listen :8443 -verbose
     -listen on :8443, serve as http/socks5 proxy on the same port, in verbose mode.
 
   glider -listen socks5://:1080 -listen http://:8080 -verbose
     -multiple listeners: listen on :1080 as socks5 proxy server, and on :8080 as http proxy server.
-  
+
   glider -listen :8443 -forward direct://#interface=eth0 -forward direct://#interface=eth1
     -multiple forwarders: listen on 8443 and forward requests via interface eth0 and eth1 in round robin mode.
-  
+
   glider -listen tls://:443?cert=crtFilePath&key=keyFilePath,http:// -verbose
     -protocol chain: listen on :443 as a https(http over tls) proxy server.
-  
+
   glider -listen http://:8080 -forward socks5://serverA:1080,socks5://serverB:1080
     -proxy chain: listen on :8080 as a http proxy server, forward all requests via forward chain.
-  
+
   glider -listen :8443 -forward socks5://serverA:1080 -forward socks5://serverB:1080#priority=10 -forward socks5://serverC:1080#priority=10
     -forwarder priority: serverA will only be used when serverB and serverC are not available.
-  
+
   glider -listen tcp://:80 -forward tcp://serverA:80
     -tcp tunnel: listen on :80 and forward all requests to serverA:80.
-  
+
   glider -listen udp://:53 -forward socks5://serverA:1080,udp://8.8.8.8:53
     -udp tunnel: listen on :53 and forward all udp requests to 8.8.8.8:53 via remote socks5 server.
-  
+
   glider -verbose -dns=:53 -dnsserver=8.8.8.8:53 -forward socks5://serverA:1080 -dnsrecord=abc.com/1.2.3.4
     -dns over proxy: listen on :53 as dns server, forward to 8.8.8.8:53 via socks5 server.
 `

@@ -26,11 +26,57 @@ type Proxy struct {
 	provider  *ProviderGroup
 }
 
+// filterForwarders filters out forwarders with specified protocols
+func filterForwarders(forwarders []string, protocolFilters []string) []string {
+	if len(protocolFilters) == 0 {
+		return forwarders
+	}
+
+	var filtered []string
+	for _, fwd := range forwarders {
+		// Extract scheme from URL
+		if !strings.Contains(fwd, "://") {
+			filtered = append(filtered, fwd)
+			continue
+		}
+
+		scheme := fwd[:strings.Index(fwd, ":")]
+		scheme = strings.ToLower(scheme)
+
+		// Check if scheme is in the filter list
+		shouldFilter := false
+		for _, filterGroup := range protocolFilters {
+			// Split comma-separated filters
+			filters := strings.Split(filterGroup, ",")
+			for _, filter := range filters {
+				filter = strings.TrimSpace(filter)
+				if strings.ToLower(filter) == scheme {
+					log.F("[filter] protocol '%s' is filtered out: %s", scheme, fwd)
+					shouldFilter = true
+					break
+				}
+			}
+			if shouldFilter {
+				break
+			}
+		}
+
+		if !shouldFilter {
+			filtered = append(filtered, fwd)
+		}
+	}
+
+	return filtered
+}
+
 // NewProxy returns a new rule proxy.
-func NewProxy(mainForwarders []string, mainStrategy *Strategy, rules []*Config, ForwardsProvider []string, ForwardsExclude []string, ForwardsInclude []string) *Proxy {
+func NewProxy(mainForwarders []string, mainStrategy *Strategy, rules []*Config, ForwardsProvider []string, ForwardsExclude []string, ForwardsInclude []string, ForwardsProtocolFilter []string) *Proxy {
+	// Filter main forwarders
+	filteredMainForwarders := filterForwarders(mainForwarders, ForwardsProtocolFilter)
+
 	rd := &Proxy{
-		main:     NewFwdrGroup("main", mainForwarders, mainStrategy),
-		provider: NewProviderGroup(ForwardsProvider, ForwardsExclude, ForwardsInclude),
+		main:     NewFwdrGroup("main", filteredMainForwarders, mainStrategy),
+		provider: NewProviderGroup(ForwardsProvider, ForwardsExclude, ForwardsInclude, ForwardsProtocolFilter),
 	}
 
 	for _, r := range rules {
@@ -255,15 +301,16 @@ func (p *Proxy) Fetch() {
 						log.F("[provider] add [%s], include keyword [%s]", decodedStr1, include)
 
 						if !slices.Contains(currentFwdrs, line) {
-							fwdr, err := ForwarderFromURL(line, "",
-								time.Duration(3)*time.Second, time.Duration(0)*time.Second)
+							fwdr, err := ForwarderFromURLWithFilter(line, "",
+								time.Duration(3)*time.Second, time.Duration(0)*time.Second, p.provider.protocolFilters)
 							if err != nil {
 								log.Fatal(err)
 							}
-							fwdr.SetMaxFailures(uint32(3))
-							p.main.fwdrs = append(p.main.fwdrs, fwdr)
-
-							fwdr.AddHandler(p.main.OnStatusChanged)
+							if fwdr != nil {
+								fwdr.SetMaxFailures(uint32(3))
+								p.main.fwdrs = append(p.main.fwdrs, fwdr)
+								fwdr.AddHandler(p.main.OnStatusChanged)
+							}
 						}
 
 						// when matched, skip next check include
@@ -304,15 +351,16 @@ func (p *Proxy) Fetch() {
 			}
 
 			if !slices.Contains(currentFwdrs, line) {
-				fwdr, err := ForwarderFromURL(line, "",
-					time.Duration(3)*time.Second, time.Duration(0)*time.Second)
+				fwdr, err := ForwarderFromURLWithFilter(line, "",
+					time.Duration(3)*time.Second, time.Duration(0)*time.Second, p.provider.protocolFilters)
 				if err != nil {
 					log.Fatal(err)
 				}
-				fwdr.SetMaxFailures(uint32(3))
-				p.main.fwdrs = append(p.main.fwdrs, fwdr)
-
-				fwdr.AddHandler(p.main.OnStatusChanged)
+				if fwdr != nil {
+					fwdr.SetMaxFailures(uint32(3))
+					p.main.fwdrs = append(p.main.fwdrs, fwdr)
+					fwdr.AddHandler(p.main.OnStatusChanged)
+				}
 			}
 
 		}

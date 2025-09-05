@@ -23,7 +23,7 @@ var (
 
 func main() {
 	// global rule proxy
-	pxy := rule.NewProxy(config.Forwards, &config.Strategy, config.rules, config.ForwardsProvider, config.ForwardsExclude, config.ForwardsInclude)
+	pxy := rule.NewProxy(config.Forwards, &config.Strategy, config.rules, config.ForwardsProvider, config.ForwardsExclude, config.ForwardsInclude, config.ForwardsProtocolFilter)
 
 	// ipset manager
 	ipsetM, _ := ipset.NewManager(config.rules)

@@ -29,8 +29,43 @@ type Forwarder struct {
 	handlers    []StatusHandler
 }
 
+// isProtocolFiltered checks if the protocol should be filtered out.
+func isProtocolFiltered(urlStr string, protocolFilters []string) bool {
+	if len(protocolFilters) == 0 {
+		return false
+	}
+
+	// Extract scheme from URL
+	if !strings.Contains(urlStr, "://") {
+		return false
+	}
+
+	scheme := urlStr[:strings.Index(urlStr, ":")]
+	scheme = strings.ToLower(scheme)
+
+	// Check if scheme is in the filter list
+	for _, filterGroup := range protocolFilters {
+		// Split comma-separated filters
+		filters := strings.Split(filterGroup, ",")
+		for _, filter := range filters {
+			filter = strings.TrimSpace(filter)
+			if strings.ToLower(filter) == scheme {
+				log.F("[filter] protocol '%s' is filtered out: %s", scheme, urlStr)
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
 // ForwarderFromURL parses `forward=` command value and returns a new forwarder.
 func ForwarderFromURL(s, intface string, dialTimeout, relayTimeout time.Duration) (f *Forwarder, err error) {
+	return ForwarderFromURLWithFilter(s, intface, dialTimeout, relayTimeout, nil)
+}
+
+// ForwarderFromURLWithFilter parses `forward=` command value and returns a new forwarder with protocol filtering.
+func ForwarderFromURLWithFilter(s, intface string, dialTimeout, relayTimeout time.Duration, protocolFilters []string) (f *Forwarder, err error) {
 	f = &Forwarder{url: s}
 
 	ss := strings.Split(s, "#")
@@ -50,9 +85,21 @@ func ForwarderFromURL(s, intface string, dialTimeout, relayTimeout time.Duration
 	}
 
 	var addrs []string
+	allFiltered := true
 	for _, url := range strings.Split(ss[0], ",") {
+		// Check if this protocol should be filtered out
+		if isProtocolFiltered(url, protocolFilters) {
+			continue
+		}
+
+		allFiltered = false
 		d, err = proxy.DialerFromURL(url, d)
 		if err != nil {
+			// If it's an unknown scheme error and the protocol is filtered, ignore the error
+			if strings.Contains(err.Error(), "unknown scheme") && isProtocolFiltered(url, protocolFilters) {
+				log.F("[filter] ignoring unknown scheme error for filtered protocol: %s", url)
+				continue
+			}
 			return nil, err
 		}
 		cnt := len(addrs)
@@ -60,6 +107,11 @@ func ForwarderFromURL(s, intface string, dialTimeout, relayTimeout time.Duration
 			(cnt > 0 && d.Addr() != addrs[cnt-1]) {
 			addrs = append(addrs, d.Addr())
 		}
+	}
+
+	// If all protocols were filtered, return nil to indicate this forwarder should be skipped
+	if allFiltered {
+		return nil, nil
 	}
 
 	f.Dialer = d

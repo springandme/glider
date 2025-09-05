@@ -36,16 +36,18 @@ type FwdrGroup struct {
 }
 
 type ProviderGroup struct {
-	url      []string
-	excludes []string
-	includes []string
+	url             []string
+	excludes        []string
+	includes        []string
+	protocolFilters []string
 }
 
-func NewProviderGroup(providers []string, excludes []string, includes []string) *ProviderGroup {
+func NewProviderGroup(providers []string, excludes []string, includes []string, protocolFilters []string) *ProviderGroup {
 	p := &ProviderGroup{
-		url:      providers,
-		excludes: excludes,
-		includes: includes,
+		url:             providers,
+		excludes:        excludes,
+		includes:        includes,
+		protocolFilters: protocolFilters,
 	}
 	return p
 }
