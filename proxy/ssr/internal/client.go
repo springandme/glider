@@ -225,7 +225,7 @@ func (c *SSTCPConn) Write(b []byte) (n int, err error) {
 	if err != nil {
 		return 0, err
 	}
-	n, err = c.Conn.Write(outData)
+	_, err = c.Conn.Write(outData)
 	if err != nil {
 		return 0, err
 	}

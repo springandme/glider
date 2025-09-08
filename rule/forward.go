@@ -70,7 +70,7 @@ func ForwarderFromURLWithFilter(s, intface string, dialTimeout, relayTimeout tim
 
 	ss := strings.Split(s, "#")
 	if len(ss) > 1 {
-		err = f.parseOption(ss[1])
+		_ = f.parseOption(ss[1])
 	}
 
 	iface := intface
