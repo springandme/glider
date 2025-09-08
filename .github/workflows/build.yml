@@ -7,6 +7,11 @@ on:
       - '*'
   pull_request:
 
+permissions:
+  contents: write  # 允许创建releases和上传assets
+  packages: write  # 如果需要发布到GitHub Packages
+  pull-requests: read  # 读取PR信息
+
 env:
   APP_NAME: glider
   PLATFORMS: linux/386,linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/riscv64
@@ -26,14 +31,32 @@ jobs:
           echo "SHA_SHORT=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           check-latest: true
           go-version-file: 'go.mod'
           cache: true
 
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
       - name: Test
         run: go test -v .
+
+      - name: Run go vet
+        run: go vet ./...
+
+      - name: Run staticcheck
+        uses: dominikh/staticcheck-action@v1.3.0
+        with:
+          version: "2023.1.6"
 
       - name: Build
         uses: goreleaser/goreleaser-action@v5
@@ -45,7 +68,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Artifact - Linux amd64
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: "!startsWith(github.ref, 'refs/tags/')"
         with:
           name: ${{ env.APP_NAME }}-dev-${{ env.SHA_SHORT }}-linux-amd64
@@ -53,7 +76,7 @@ jobs:
             ./dist/default_linux_amd64_v1/${{ env.APP_NAME }}
 
       - name: Upload Artifact - Linux arm64
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: "!startsWith(github.ref, 'refs/tags/')"
         with:
           name: ${{ env.APP_NAME }}-dev-${{ env.SHA_SHORT }}-linux-arm64
@@ -61,7 +84,7 @@ jobs:
             ./dist/default_linux_arm64/${{ env.APP_NAME }}
 
       - name: Upload Artifact - Darwin arm64
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: "!startsWith(github.ref, 'refs/tags/')"
         with:
           name: ${{ env.APP_NAME }}-dev-${{ env.SHA_SHORT }}-darwin-arm64
@@ -69,7 +92,7 @@ jobs:
             ./dist/default_darwin_arm64/${{ env.APP_NAME }}
 
       - name: Upload Artifact - Windows amd64
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: "!startsWith(github.ref, 'refs/tags/')"
         with:
           name: ${{ env.APP_NAME }}-dev-${{ env.SHA_SHORT }}-windows-amd64
