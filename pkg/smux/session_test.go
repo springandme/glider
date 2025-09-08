@@ -292,16 +292,28 @@ func TestGetDieCh(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer ss.Close()
+	defer cs.Close() // 确保client stream也被关闭
+
 	dieCh := ss.GetDieCh()
+
+	// 使用channel在goroutine和主测试线程间传递结果
+	resultCh := make(chan error, 1)
 	go func() {
 		select {
 		case <-dieCh:
-		case <-time.Tick(time.Second):
-			t.Fatal("wait die chan timeout")
+			resultCh <- nil // 成功接收到die信号
+		case <-time.After(time.Second):
+			resultCh <- fmt.Errorf("wait die chan timeout")
 		}
 	}()
-	cs.Close()
+
+	// 关闭server stream，这应该会触发die channel
+	ss.Close()
+
+	// 在主测试goroutine中检查结果
+	if err := <-resultCh; err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestSpeed(t *testing.T) {
