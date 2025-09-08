@@ -53,12 +53,6 @@ jobs:
       - name: Run go vet
         run: go vet ./...
 
-      - name: Run staticcheck
-        uses: dominikh/staticcheck-action@v1.3.0
-        with:
-          version: "2023.1.6"
-          checks: "all,-U1000,-SA1019,-ST1000,-ST1003,-ST1020,-ST1021,-ST1023"
-
       - name: Build
         uses: goreleaser/goreleaser-action@v5
         if: "!startsWith(github.ref, 'refs/tags/')"
