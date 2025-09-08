@@ -57,6 +57,7 @@ jobs:
         uses: dominikh/staticcheck-action@v1.3.0
         with:
           version: "2023.1.6"
+          config-file: staticcheck.conf
 
       - name: Build
         uses: goreleaser/goreleaser-action@v5

@@ -67,7 +67,7 @@ func closeFD(fd int) error {
 func Dial(cid, port uint32) (Conn, error) {
 	fd, err := syscall.Socket(unix.AF_VSOCK, syscall.SOCK_STREAM|syscall.SOCK_CLOEXEC, 0)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to create AF_VSOCK socket: %w", err)
+		return nil, fmt.Errorf("failed to create AF_VSOCK socket: %w", err)
 	}
 	sa := &unix.SockaddrVM{CID: cid, Port: port}
 	// Retry connect in a loop if EINTR is encountered.

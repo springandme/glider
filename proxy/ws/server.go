@@ -158,8 +158,8 @@ func (c *ServerConn) Handshake(host, path string) error {
 		return err
 	}
 
-	_, path, _, ok := parseFirstLine(line)
-	if !ok || path != path {
+	_, requestPath, _, ok := parseFirstLine(line)
+	if !ok || requestPath != path {
 		return errors.New("[ws] error in ws handshake parseFirstLine: " + line)
 	}
 

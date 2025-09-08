@@ -49,10 +49,14 @@ func NewSS(s string, d proxy.Dialer, p proxy.Proxy) (*SS, error) {
 			log.F("[ss] parse err: %s", err)
 			return nil, err
 		}
-		u, err := url.Parse(string(ss))
-		method = u.Scheme
-		pass = strings.Split(u.Opaque, "@")[0]
-		addr = strings.Split(u.Opaque, "@")[1]
+		parsedURL, err := url.Parse(string(ss))
+		if err != nil {
+			log.F("[ss] parse decoded URL err: %s", err)
+			return nil, err
+		}
+		method = parsedURL.Scheme
+		pass = strings.Split(parsedURL.Opaque, "@")[0]
+		addr = strings.Split(parsedURL.Opaque, "@")[1]
 
 	} else if !strings.Contains(u.User.String(), "-") {
 
@@ -90,7 +94,7 @@ func init() {
 	proxy.AddUsage("ss", `
 SS scheme:
   ss://method:pass@host:port
-  
+
   Available methods for ss:
     AEAD Ciphers:
       AEAD_AES_128_GCM AEAD_AES_192_GCM AEAD_AES_256_GCM AEAD_CHACHA20_POLY1305 AEAD_XCHACHA20_POLY1305

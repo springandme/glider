@@ -24,8 +24,8 @@ func createCRC32Table() {
 	}
 }
 
-func CalcCRC32(input []byte, length int, value uint32) uint32 {
-	value = 0xFFFFFFFF
+func CalcCRC32(input []byte, length int, _ uint32) uint32 {
+	value := uint32(0xFFFFFFFF)
 	return DoCalcCRC32(input, 0, length, value)
 }
 

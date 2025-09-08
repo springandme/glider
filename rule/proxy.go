@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"net/netip"
 	"net/url"
-	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -15,6 +14,16 @@ import (
 	"github.com/meoww-bot/glider/pkg/log"
 	"github.com/meoww-bot/glider/proxy"
 )
+
+// contains checks if a slice contains a specific string value
+func contains(slice []string, item string) bool {
+	for _, s := range slice {
+		if s == item {
+			return true
+		}
+	}
+	return false
+}
 
 // Proxy implements the proxy.Proxy interface with rule support.
 type Proxy struct {
@@ -300,7 +309,7 @@ func (p *Proxy) Fetch() {
 					if strings.Contains(decodedStr1, include) {
 						log.F("[provider] add [%s], include keyword [%s]", decodedStr1, include)
 
-						if !slices.Contains(currentFwdrs, line) {
+						if !contains(currentFwdrs, line) {
 							fwdr, err := ForwarderFromURLWithFilter(line, "",
 								time.Duration(3)*time.Second, time.Duration(0)*time.Second, p.provider.protocolFilters)
 							if err != nil {
@@ -350,7 +359,7 @@ func (p *Proxy) Fetch() {
 				}
 			}
 
-			if !slices.Contains(currentFwdrs, line) {
+			if !contains(currentFwdrs, line) {
 				fwdr, err := ForwarderFromURLWithFilter(line, "",
 					time.Duration(3)*time.Second, time.Duration(0)*time.Second, p.provider.protocolFilters)
 				if err != nil {

@@ -141,7 +141,7 @@ func (t *tls12TicketAuth) Encode(data []byte) (encodedData []byte, err error) {
 					encodedData = packData(encodedData, data[start:start+l])
 				}
 				t.sendSaver = append(t.sendSaver, encodedData...)
-				encodedData = encodedData[:0]
+				encodedData = nil
 			}
 			return []byte{}, nil
 		}
